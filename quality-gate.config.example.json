@@ -1,0 +1,47 @@
+{
+  "$comment": "Example configuration for a fictional project called 'Acme Shop'. Every key is optional; omitted keys use the defaults in src/config.ts. Copy to quality-gate.config.json and adjust.",
+  "harness": {
+    "fullCommand": "npm run check",
+    "smokeBaseCommands": ["npm run lint", "npm run typecheck"],
+    "knownScripts": ["lint", "typecheck", "test", "build"],
+    "fullRiskPaths": ["packages/db/**", "**/*auth*", "**/*ledger*", "**/*payment*"],
+    "timeoutMs": 1800000
+  },
+  "security": {
+    "additionalWorkspaces": [],
+    "approvedNetworkHosts": ["registry.npmjs.org"],
+    "safeNpmScripts": ["check", "build", "typecheck", "lint", "test", "format:check"]
+  },
+  "risk": {
+    "maxLowRiskScopePaths": 5,
+    "researchScopePrefix": "docs/research/",
+    "projectNames": ["Acme Shop", "Acme"],
+    "extraKeywords": {
+      "payment_economy": ["stars", "coupon", "gift card"]
+    },
+    "extraCategories": [
+      {
+        "id": "loyalty_economy",
+        "reason": "changes loyalty points or discount economics of the product",
+        "pattern": "\\b(loyalty points?|discount (rate|tier)|cashback)\\b"
+      }
+    ]
+  },
+  "size": {
+    "maxAllowedPaths": 8,
+    "maxAcceptanceCriteria": 5,
+    "maxSubsystems": 2,
+    "maxDependencies": 5,
+    "maxEstimatedDurationMs": 5400000,
+    "maxDescriptionLength": 1200,
+    "twoLevelRoots": ["apps", "packages", "services"]
+  },
+  "reuse": {
+    "registryPath": "docs/REUSE_CAPABILITY_REGISTRY.md"
+  },
+  "qa": {
+    "taskContextBudgetChars": 24000,
+    "runContextBudgetChars": 72000,
+    "minContextBudgetChars": 8000
+  }
+}
