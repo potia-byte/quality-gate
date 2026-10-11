@@ -1,6 +1,6 @@
 # quality-gate
 
-**English summary.** `quality-gate` is a small TypeScript library that sits between an AI coding agent and your repository and decides whether the agent's change may be accepted. It does not trust the agent's report: it re-reads the real git diff, checks it against the declared scope, runs the checks itself, and refuses a reviewer's "PASS" unless the harness is green for that exact commit. Configurable regex/heuristic risk and security policies determine how much verification a task needs and which shell commands are allowed; the library was extracted from a larger private monorepo tool, and all project-specific paths and vocabulary are now configuration. It includes a library and offline demo (`npm run demo`), uses no external APIs, has 136 tests, is Windows-verified, and the rest of this document is in Russian.
+**English summary.** `quality-gate` is a small TypeScript library that sits between an AI coding agent and your repository and decides whether the agent's change may be accepted. It does not trust the agent's report: it re-reads the real git diff, checks it against the declared scope, runs the checks itself, and refuses a reviewer's "PASS" unless the harness is green for that exact commit. Configurable regex/heuristic risk and security policies determine how much verification a task needs and which shell commands are allowed; the library was extracted from a larger private monorepo tool, and all project-specific paths and vocabulary are now configuration. At present it is a private TypeScript library (`private: true`), not a GitHub Action or a CLI, and it is not published to npm. It includes an offline demo (`npm run demo`), uses no external APIs, has 136 tests, is Windows-verified, and the rest of this document is in Russian.
 
 ---
 
@@ -107,19 +107,19 @@ flowchart TD
 
 ### Ограничения
 
-- **Не весь исходный конвейер.** Не выделены: планировщик, автопилот, worktree, адаптеры CLI-агентов (`claude`/`codex`), пул моделей, handoff-файлы, run phases, repair/epics, `failure-classifier`, Graphify-контекст, повторное использование baseline между попытками. Это именно quality-gate, не «Developer Factory».
+- **Не весь исходный конвейер.** Не выделены: планировщик, автопилот, worktree, адаптеры для внешних агентов (`claude`/`codex`), пул моделей, handoff-файлы, run phases, repair/epics, `failure-classifier`, Graphify-контекст, повторное использование baseline между попытками. Это именно quality-gate, не «Developer Factory».
 - **Формат состояния несовместим** с `.dev-factory/state.json` исходника.
 - **Реального LLM-ревьюера здесь нет.** Демо использует скриптовые «разработчика» и «ревьюера»; интеграция с `claude`/`codex` — на стороне вызывающего (в демо показан порядок вызовов). Работа с реальными агентами в этом репозитории не проверялась.
-- **Эвристики на регулярных выражениях.** Риск-классификатор — совпадение по словам (английский и русский), возможны ложные срабатывания (в ходе демо «`src/price.js`» в описании задачи дало `high` из-за слова `price`) и пропуски. Детектор prompt-injection грубый (≥2 слабых признака). Это не песочница: `classifyCommand` классифицирует строки, а не изолирует выполнение.
-- **`npm run test` запускает код проверяемого репозитория.** Кандидат может изменить `package.json`/тесты так, чтобы проверка проходила. Защита — внести эти файлы в `forbidden_paths`; по умолчанию этого нет.
+- **Эвристики на регулярных выражениях.** Словарные категории риска ищутся в `title`, `description` и `rationale` задачи (английский и русский); пути в этот текст не входят. `allowed_paths` отдельно сверяются с шаблонами защищённых и чувствительных путей. Поэтому слово `price` в описании задачи даёт `high` независимо от того, указан ли путь `src/price.js`; возможны ложные срабатывания и пропуски. Детектор prompt-injection грубый (≥2 слабых признака). Это не песочница: `classifyCommand` классифицирует строки, а не изолирует выполнение.
+- **Проверки исполняют код проверяемой ветки.** `npm test` и другие `required_checks` запускаются из корня репозитория на проверяемом коммите. По умолчанию `forbidden_paths` пуст: не защищены `package.json`, тесты и `.github/**`, поэтому агент теоретически может изменить саму проверку так, чтобы она прошла.
 - **Проверено только на Windows.** Ветки для Linux/macOS (запуск без `cmd.exe`, убийство группы процессов) покрыты только тестами разбора команд с явным `platform`, на реальном Linux/macOS не запускались.
 - **`FileStore` без межпроцессной блокировки.** Исходник держал lock-файл; здесь сериализация только внутри одного процесса.
 - **Таймаут harness — на одну команду**, не на задачу целиком. Отмены/паузы нет.
-- **Нет CLI и публикации в npm** (`private: true`); библиотека + демо.
+- **Это не готовый GitHub Action и не CLI.** Сейчас это библиотека TypeScript с офлайн-демо; пакет помечен `private: true` и не опубликован в npm.
 
 ### Что дальше
 
-Lock-файл для `FileStore`; тест на Linux/macOS в CI; готовые адаптеры «агент → JSON-результат» поверх `parseJsonResult`/`developerResultJsonSchema`; предупреждение при задаче без `package.json`/конфига тестов в `forbidden_paths`.
+Возможный roadmap — commit-bound acceptance: правка агента принимается только если независимые проверки прошли на том же коммите. Предполагаемая форма — GitHub Action; это направление пока не реализовано. Для него потребуются режим «контракт + PR-diff» без жизненного цикла `addTask`/`claim`/ledger, защита файлов проверки по умолчанию и прогон на Linux. Отдельно остаются возможные улучшения: lock-файл для `FileStore`, тест на Linux/macOS в CI, адаптеры «агент → JSON-результат» поверх `parseJsonResult`/`developerResultJsonSchema` и предупреждение при задаче без `package.json`/конфига тестов в `forbidden_paths`.
 
 ## 6. Как запустить
 
