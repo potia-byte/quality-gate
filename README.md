@@ -1,6 +1,6 @@
 # quality-gate
 
-**English summary.** `quality-gate` is a small TypeScript library that sits between an AI coding agent and your repository and decides whether the agent's change may be accepted. It does not trust the agent's report: it re-reads the real git diff, checks it against the declared scope, runs the checks itself, and refuses a reviewer's "PASS" unless the harness is green for that exact commit. Risk and security policies (regex/heuristic, configurable) decide how much verification a task needs and which shell commands are allowed. It was extracted from a larger private monorepo tool; all project-specific paths and vocabulary are now configuration. Library + offline demo (`npm run demo`), no external APIs, 136 tests, Windows-verified. The rest of this document is in Russian.
+**English summary.** `quality-gate` is a small TypeScript library that sits between an AI coding agent and your repository and decides whether the agent's change may be accepted. It does not trust the agent's report: it re-reads the real git diff, checks it against the declared scope, runs the checks itself, and refuses a reviewer's "PASS" unless the harness is green for that exact commit. Configurable regex/heuristic risk and security policies determine how much verification a task needs and which shell commands are allowed; the library was extracted from a larger private monorepo tool, and all project-specific paths and vocabulary are now configuration. It includes a library and offline demo (`npm run demo`), uses no external APIs, has 136 tests, is Windows-verified, and the rest of this document is in Russian.
 
 ---
 
@@ -86,7 +86,7 @@ flowchart TD
 | `tg:qa`, `biome:check` как «известные» скрипты | `security.safeNpmScripts`, `harness.knownScripts` |
 | Состояние в `.dev-factory/state.json` схемы всего монорепо | своя компактная схема + `MemoryStore`/`FileStore` |
 
-## 5. Ограничения и решения
+## 5. Ограничения и что дальше
 
 ### Решено: таймаут теста на Windows и EPERM при очистке
 
@@ -166,4 +166,8 @@ await gate.completeTask("TASK-1");
 
 ## 7. Моя роль
 
-Продуктовая постановка (зачем нужен независимый слой приёмки и какие инварианты он должен держать), архитектура (разделение «политики / проверка репозитория / запуск проверок / ledger», вынос проектных терминов в конфигурацию) и приёмка результата. Код написан с помощью ИИ-агентов (Claude, Codex) под управлением владельца; это выделение в отдельный модуль выполнено агентом Claude по постановке владельца и принято по результатам тестов, проверки типов и демо.
+Продуктовая постановка, архитектура и приёмка — мои. Код написан ИИ-агентами (Claude, Codex) под моим управлением. Продуктовая постановка охватывала независимый слой приёмки и его инварианты; архитектура — разделение «политики / проверка репозитория / запуск проверок / ledger» и вынос проектных терминов в конфигурацию. Это выделение в отдельный модуль выполнено агентом Claude по постановке владельца и принято по результатам тестов, проверки типов и демо.
+
+## Связанные репозитории
+
+- [developer-factory-case](https://github.com/potia-byte/developer-factory-case) — архитектура системы ИИ-агентов, частью которой был этот модуль
